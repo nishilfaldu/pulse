@@ -1,24 +1,73 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+
+export {
+  // Catch any errors thrown by the Layout component.
+  ErrorBoundary
+} from 'expo-router';
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  // Ensure that reloading on `/modal` keeps a back button present.
+  initialRouteName: '(tabs)',
 };
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
 
+export default function RootLayout() {
+  const [loaded, error] = useFonts({
+    // SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'), // Commented out as I don't have this font file
+    ...FontAwesome.font,
+  });
+
+  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+  useEffect(() => {
+    if (error) throw error;
+  }, [error]);
+
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded]);
+
+  if (!loaded) {
+    return null;
+  }
+
+  return <RootLayoutNav />;
+}
+
+const CustomTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: '#FFF8F0', // COLORS.bg
+  },
+};
+
+function RootLayoutNav() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={CustomTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="war-room" options={{ headerShown: false }} />
+          <Stack.Screen name="global-signals" options={{ headerShown: false }} />
+          <Stack.Screen name="clips-feed" options={{ headerShown: false, gestureEnabled: false }} />
+          <Stack.Screen name="city/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="cheat-codes" options={{ headerShown: false }} />
+          <Stack.Screen name="badges" options={{ headerShown: false }} />
+        </Stack>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

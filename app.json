@@ -9,7 +9,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.7west.space.pulse",
+      "appleTeamId": "JRWP8L6WMX"
     },
     "android": {
       "adaptiveIcon": {
