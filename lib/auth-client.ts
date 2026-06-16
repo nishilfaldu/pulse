@@ -1,0 +1,25 @@
+import { auth } from '@/convex/betterAuth/auth';
+import { expoClient } from '@better-auth/expo/client';
+import { convexClient } from "@convex-dev/better-auth/client/plugins";
+import { emailOTPClient, inferAdditionalFields } from "better-auth/client/plugins";
+import { createAuthClient } from "better-auth/react";
+import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
+
+export const authClient = createAuthClient({
+    baseURL: process.env.EXPO_PUBLIC_CONVEX_SITE_URL,
+    plugins: [
+        expoClient({
+            scheme: Constants.expoConfig?.scheme as string,
+            storagePrefix: Constants.expoConfig?.scheme as string,
+            storage: SecureStore,
+        }),
+        convexClient(),
+        emailOTPClient(),
+        inferAdditionalFields<typeof auth>(),
+        // inferAdditionalFields<ReurnType<typeof createAuth>>(),
+    ],
+});
+
+// Export typed session for use in components
+export type Session = typeof authClient.$Infer.Session;

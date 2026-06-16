@@ -1,17 +1,27 @@
 {
   "expo": {
-    "name": "pulse",
-    "slug": "pulse",
-    "version": "1.0.0",
+    "name": "irl",
+    "slug": "irl",
+    "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "pulse",
+    "scheme": "irl",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.7west.space.pulse",
-      "appleTeamId": "JRWP8L6WMX"
+      "bundleIdentifier": "com.irl.app",
+      "appleTeamId": "JRWP8L6WMX",
+      "entitlements": {
+        "aps-environment": "production",
+        "com.apple.developer.associated-domains": [
+          "applinks:irl.app"
+        ]
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "Side Quest uses your camera to capture proof of your daily quests and share moments with the global community.",
+        "NSMicrophoneUsageDescription": "Side Quest uses your microphone to record audio for your quest submissions and shared content."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -20,6 +30,12 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -35,16 +51,33 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#000000",
           "dark": {
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-video",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Side Quest to access your camera to capture proof.",
+          "microphonePermission": "Allow Side Quest to access your microphone to record audio."
+        }
+      ],
+      "expo-secure-store",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "27ccafa9-60f1-4442-a5b8-d7e63800529f"
+      }
+    },
+    "owner": "nishilfaldu"
   }
 }

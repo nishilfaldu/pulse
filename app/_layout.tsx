@@ -1,3 +1,5 @@
+import { authClient } from "@/lib/auth-client";
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -7,7 +9,6 @@ import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
-
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary
@@ -15,7 +16,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: 'index',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -49,25 +50,74 @@ const CustomTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    background: '#FFF8F0', // COLORS.bg
+    background: '#000000', // Default to black to prevent flashes
   },
 };
 
+import { ConvexReactClient } from 'convex/react';
+
+const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
+  unsavedChangesWarning: false,
+});
+
+import { api } from "@/convex/_generated/api";
+import { useAuthenticatedQuery } from '@/hooks/use-authenticated-query';
+
 function RootLayoutNav() {
+  const { data: session, isPending } = authClient.useSession();
+
+  const isAuthenticated = !isPending && !!session?.user;
+  const hasUsername = !isPending && !!(session?.user as any)?.username;
+  const isFullyOnboarded = isAuthenticated && hasUsername;
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={CustomTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="war-room" options={{ headerShown: false }} />
-          <Stack.Screen name="global-signals" options={{ headerShown: false }} />
-          <Stack.Screen name="clips-feed" options={{ headerShown: false, gestureEnabled: false }} />
-          <Stack.Screen name="city/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="cheat-codes" options={{ headerShown: false }} />
-          <Stack.Screen name="badges" options={{ headerShown: false }} />
-        </Stack>
+        <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+          <StackNavigator isAuthenticated={isAuthenticated} hasUsername={hasUsername} isFullyOnboarded={isFullyOnboarded} />
+        </ConvexBetterAuthProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
+  );
+}
+
+function StackNavigator({ isAuthenticated, hasUsername, isFullyOnboarded }: { isAuthenticated: boolean; hasUsername: boolean; isFullyOnboarded: boolean }) {
+  const hasCompletedToday = useAuthenticatedQuery(api.quests.hasCompletedTodaysQuest, {});
+
+  return (
+    <Stack>
+      {/* Initial Loading Screen */}
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+
+      {/* Onboarding Flow - Accessible anytime during onboarding */}
+      <Stack.Screen name="onboarding/splash" options={{ headerShown: false, gestureEnabled: false }} />
+      <Stack.Screen name="onboarding/email" options={{ headerShown: false, gestureEnabled: false }} />
+      <Stack.Screen name="onboarding/otp" options={{ headerShown: false, gestureEnabled: false }} />
+
+      {/* Username Setup - Only when authenticated but no username */}
+      <Stack.Protected guard={isAuthenticated && !hasUsername}>
+        <Stack.Screen name="onboarding/username" options={{ headerShown: false, gestureEnabled: false }} />
+        <Stack.Screen name="onboarding/permissions" options={{ headerShown: false, gestureEnabled: false }} />
+      </Stack.Protected>
+
+      {/* Quest Locked - Show only gate/archive when quest not completed */}
+      <Stack.Protected guard={isFullyOnboarded && !hasCompletedToday}>
+        <Stack.Screen name="gate" options={{ headerShown: false }} />
+        <Stack.Screen name="camera" options={{ headerShown: false }} />
+        <Stack.Screen name="uploading" options={{ headerShown: false }} />
+        <Stack.Screen name="archive" options={{ headerShown: false }} />
+      </Stack.Protected>
+
+      {/* Quest Unlocked - Show all screens when quest completed */}
+      <Stack.Protected guard={isFullyOnboarded && hasCompletedToday === true}>
+        <Stack.Screen name="lobby" options={{ headerShown: false }} />
+        <Stack.Screen name="feed" options={{ headerShown: false, animation: 'slide_from_right', gestureEnabled: true }} />
+        <Stack.Screen name="submission" options={{ headerShown: false, presentation: 'transparentModal', animation: 'fade' }} />
+        <Stack.Screen name="wrap" options={{ headerShown: false }} />
+      </Stack.Protected>
+
+      {/* Modals - Accessible anytime */}
+      <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+    </Stack>
   );
 }

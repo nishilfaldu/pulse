@@ -36,6 +36,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# local agent config
+.claude/
+
 app-example
 
 # generated native folders
